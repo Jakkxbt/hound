@@ -14,7 +14,7 @@ console = Console()
 
 BANNER = """
 [bold cyan]  ╔─ HOUND ─────────────────────────────────────────────╗[/bold cyan]
-[bold cyan]  │[/bold cyan]  [bold white]email osint[/bold white] [dim]· account discovery · 27+ platforms[/dim]  [bold cyan]│[/bold cyan]
+[bold cyan]  │[/bold cyan]  [bold white]email osint[/bold white] [dim]· account discovery · 42+ platforms[/dim]  [bold cyan]│[/bold cyan]
 [bold cyan]  ╚─────────────────────────────────────────────────────╝[/bold cyan]
 """
 
@@ -28,7 +28,7 @@ BANNER = """
 @click.option("--concurrency", "-c", default=10, show_default=True, help="Concurrent checks")
 @click.option("--no-banner", is_flag=True, hidden=True)
 def main(email, only, as_json, found_only, timeout, concurrency, no_banner):
-    """Hunt for accounts registered to EMAIL across 27+ platforms."""
+    """Hunt for accounts registered to EMAIL across 42 platforms."""
 
     if not as_json and not no_banner:
         console.print(BANNER)

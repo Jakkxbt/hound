@@ -37,7 +37,7 @@ python -m hound.web
 
 ## Platforms
 
-Duolingo, GitHub, GitLab, Spotify, Twitter/X, Instagram, Discord, Reddit, Tumblr, Patreon, Dropbox, Pinterest, WordPress.com, Bugcrowd, Roblox, Twitch, Adobe, ProtonMail, LastPass, Fiverr, Airbnb, Kickstarter, eBay, Samsung, Linktree, Snapchat, Stack Overflow
+Duolingo, GitHub, GitLab, Spotify, Twitter/X, Instagram, Discord, Reddit, Tumblr, Patreon, Dropbox, Pinterest, WordPress.com, Bugcrowd, Roblox, Twitch, Adobe, ProtonMail, LastPass, Fiverr, Airbnb, Kickstarter, eBay, Samsung, Linktree, Snapchat, Stack Overflow, TikTok, LinkedIn, Steam, Epic Games, Microsoft, Gravatar, OnlyFans, Fansly, Chaturbate, Vimeo, SoundCloud, Medium, Substack, DeviantArt, Etsy
 
 ## Adding Sites
 

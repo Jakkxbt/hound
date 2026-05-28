@@ -1,12 +1,12 @@
 # HOUND — Operational Guide
-**Email OSINT | Account Discovery**
+**Email OSINT | Account Discovery | 42 Platforms**
 *CobraSEC Internal — GhostWire-0*
 
 ---
 
 ## What It Does
 
-HOUND takes an email address and checks 27+ platforms to find which ones have an account registered to it. Runs all checks concurrently — full scan completes in ~10–15 seconds.
+HOUND takes an email address and checks 42 platforms to find which ones have an account registered to it. Runs all checks concurrently — full scan completes in ~10–20 seconds.
 
 Two modes:
 - **CLI** — terminal tool, coloured output, JSON export
@@ -62,6 +62,9 @@ Site names (lowercase, no spaces):
 `reddit` `tumblr` `patreon` `dropbox` `pinterest` `wordpress` `bugcrowd`
 `roblox` `twitch` `adobe` `protonmail` `lastpass` `fiverr` `airbnb`
 `kickstarter` `ebay` `samsung` `linktree` `snapchat` `stackoverflow`
+`tiktok` `linkedin` `steam` `epicgames` `microsoft` `gravatar`
+`onlyfans` `fansly` `chaturbate` `vimeo` `soundcloud` `medium`
+`substack` `deviantart` `etsy`
 
 ---
 
