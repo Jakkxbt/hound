@@ -12,14 +12,10 @@ from .modules import ALL_MODULES, SITE_NAMES
 
 console = Console()
 
-BANNER = """[bold green]
-  ██╗  ██╗ ██████╗ ██╗   ██╗███╗   ██╗██████╗
-  ██║  ██║██╔═══██╗██║   ██║████╗  ██║██╔══██╗
-  ███████║██║   ██║██║   ██║██╔██╗ ██║██║  ██║
-  ██╔══██║██║   ██║██║   ██║██║╚██╗██║██║  ██║
-  ██║  ██║╚██████╔╝╚██████╔╝██║ ╚████║██████╔╝
-  ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚═════╝
-[/bold green][dim]  Email OSINT — account discovery across 27+ platforms[/dim]
+BANNER = """
+[bold cyan]  ╔─ HOUND ─────────────────────────────────────────────╗[/bold cyan]
+[bold cyan]  │[/bold cyan]  [bold white]email osint[/bold white] [dim]· account discovery · 27+ platforms[/dim]  [bold cyan]│[/bold cyan]
+[bold cyan]  ╚─────────────────────────────────────────────────────╝[/bold cyan]
 """
 
 
