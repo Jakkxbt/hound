@@ -207,19 +207,14 @@ async def check_discord(client: httpx.AsyncClient, email: str) -> dict:
                      "Origin": "https://discord.com",
                      "Referer": "https://discord.com/login",
                      "X-Discord-Locale": "en-US",
-                     "X-Debug-Options": "bugReporterEnabled",
-                     "Sec-Fetch-Site": "same-origin",
-                     "Sec-Fetch-Mode": "cors"},
+                     "X-Debug-Options": "bugReporterEnabled"},
             timeout=10
         )
-        # 200 with {} = email sent (Discord doesn't confirm existence for security)
-        # but a 200 is only returned when the email is valid format and accepted
         if r.status_code == 200:
             return _r(name, url, True)
         if r.status_code == 429:
             return _r(name, url, None, "rate limited")
         data = _json(r)
-        # 400 with specific errors about email field = no account
         errors = data.get("email", [])
         if errors:
             return _r(name, url, False)
@@ -542,6 +537,9 @@ async def check_protonmail(client: httpx.AsyncClient, email: str) -> dict:
         # 2011 = invalid credentials / user not found
         if code in (2011, 12010):
             return _r(name, url, False)
+        # 5002 = human verification required (captcha)
+        if code == 5002:
+            return _r(name, url, None, "captcha required")
         # Try availability check as fallback
         r2 = await client.get(
             "https://account.proton.me/api/core/v4/users/available",
@@ -791,6 +789,8 @@ async def check_snapchat(client: httpx.AsyncClient, email: str) -> dict:
             text = r2.text.lower()
             if data.get("status") == "OK" or r2.status_code == 200:
                 return _r(name, url, True)
+            if r2.status_code == 404:
+                return _r(name, url, False)
             if "not found" in text or "no account" in text:
                 return _r(name, url, False)
             return _r(name, url, None, f"status {r2.status_code}")
@@ -925,6 +925,8 @@ async def check_epicgames(client: httpx.AsyncClient, email: str) -> dict:
         )
         if r.status_code == 200:
             return _r(name, url, True)
+        if r.status_code == 409:
+            return _r(name, url, True)  # 409 Conflict = email already registered
         if r.status_code in (400, 404):
             data = _json(r)
             err = (data.get("errorMessage", "") or data.get("message", "")).lower()
@@ -942,15 +944,16 @@ async def check_microsoft(client: httpx.AsyncClient, email: str) -> dict:
         r = await client.post(
             "https://login.live.com/GetCredentialType.srf",
             json={"username": email,
+                  "uaid": "",
                   "isOtherIdpSupported": True,
                   "checkPhones": False,
-                  "isRemoteNGCSupported": True,
+                  "isRemoteNGCSupported": False,
                   "isCookieBannerShown": False,
-                  "isFidoSupported": True,
-                  "originalRequest": "",
-                  "country": "US"},
+                  "isFidoSupported": False,
+                  "originalRequest": ""},
             headers={**HEADERS,
                      "Content-Type": "application/json",
+                     "Accept": "application/json",
                      "Origin": "https://login.live.com",
                      "Referer": "https://login.live.com/"},
             timeout=10
@@ -961,6 +964,23 @@ async def check_microsoft(client: httpx.AsyncClient, email: str) -> dict:
             return _r(name, url, True)
         if result == 1:
             return _r(name, url, False)
+        if result == 6:
+            return _r(name, url, True)  # federated account (work/school)
+        # Fallback: enterprise endpoint
+        r2 = await client.post(
+            "https://login.microsoftonline.com/common/GetCredentialType",
+            json={"Username": email, "isOtherIdpSupported": True},
+            headers={**HEADERS, "Content-Type": "application/json"},
+            timeout=10
+        )
+        data2 = _json(r2)
+        result2 = data2.get("IfExistsResult", -1)
+        if result2 == 0:
+            return _r(name, url, True)
+        if result2 == 1:
+            return _r(name, url, False)
+        if result2 == 6:
+            return _r(name, url, True)
         return _r(name, url, None, f"IfExistsResult={result}")
     except Exception as e:
         return _r(name, url, None, str(e))
@@ -988,11 +1008,14 @@ async def check_gravatar(client: httpx.AsyncClient, email: str) -> dict:
 async def check_onlyfans(client: httpx.AsyncClient, email: str) -> dict:
     name, url = "OnlyFans", "https://onlyfans.com"
     try:
+        # Forgot password via web form (avoids x-bc requirement)
+        g = await client.get("https://onlyfans.com/", headers=HEADERS, timeout=10)
         r = await client.post(
             "https://onlyfans.com/api2/v2/users/forgot-password",
-            json={"email": email},
+            data={"email": email},
             headers={**HEADERS,
-                     "Content-Type": "application/json",
+                     "Content-Type": "application/x-www-form-urlencoded",
+                     "X-Bc": "",
                      "Origin": "https://onlyfans.com",
                      "Referer": "https://onlyfans.com/login"},
             timeout=10
@@ -1066,22 +1089,30 @@ async def check_chaturbate(client: httpx.AsyncClient, email: str) -> dict:
 async def check_vimeo(client: httpx.AsyncClient, email: str) -> dict:
     name, url = "Vimeo", "https://vimeo.com"
     try:
+        g = await client.get("https://vimeo.com/forgot_password",
+                             headers=HEADERS, timeout=10)
+        token = (g.cookies.get("vimeo_csrf") or
+                 _csrf(g.text, "csrf_hash", "vimeo_csrf", "authenticity_token"))
         r = await client.post(
-            "https://vimeo.com/api/internal/auth/password/forgot",
-            json={"email": email},
+            "https://vimeo.com/forgot_password",
+            data={"email": email, "csrf_hash": token, "action": "send_link"},
             headers={**HEADERS,
-                     "Content-Type": "application/json",
+                     "Content-Type": "application/x-www-form-urlencoded",
                      "Origin": "https://vimeo.com",
-                     "Referer": "https://vimeo.com/"},
+                     "Referer": "https://vimeo.com/forgot_password",
+                     "X-Requested-With": "XMLHttpRequest"},
             timeout=10
         )
+        text = r.text.lower()
+        data = _json(r)
         if r.status_code == 200:
+            if any(x in text for x in ["sent", "check your", "email", "instructions"]):
+                return _r(name, url, True)
+            if data.get("success") or data.get("result") == "success":
+                return _r(name, url, True)
+        if r.status_code in (302, 303):
             return _r(name, url, True)
-        if r.status_code in (400, 404):
-            data = _json(r)
-            err = str(data.get("error", "")).lower()
-            if any(x in err for x in ["not found", "no account", "doesn't exist"]):
-                return _r(name, url, False)
+        if any(x in text for x in ["not found", "no account", "doesn't exist"]):
             return _r(name, url, False)
         return _r(name, url, None, f"status {r.status_code}")
     except Exception as e:
