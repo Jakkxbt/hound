@@ -12,9 +12,9 @@ from .modules import ALL_MODULES, SITE_NAMES
 
 console = Console()
 
-BANNER = """
+BANNER = f"""
 [bold cyan]  ╔─ HOUND ─────────────────────────────────────────────╗[/bold cyan]
-[bold cyan]  │[/bold cyan]  [bold white]email osint[/bold white] [dim]· account discovery · 42+ platforms[/dim]  [bold cyan]│[/bold cyan]
+[bold cyan]  │[/bold cyan]  [bold white]email osint[/bold white] [dim]· account discovery · {len(ALL_MODULES)} platforms[/dim]    [bold cyan]│[/bold cyan]
 [bold cyan]  ╚─────────────────────────────────────────────────────╝[/bold cyan]
 """
 
@@ -28,7 +28,7 @@ BANNER = """
 @click.option("--concurrency", "-c", default=10, show_default=True, help="Concurrent checks")
 @click.option("--no-banner", is_flag=True, hidden=True)
 def main(email, only, as_json, found_only, timeout, concurrency, no_banner):
-    """Hunt for accounts registered to EMAIL across 42 platforms."""
+    """Hunt for accounts registered to EMAIL across supported platforms."""
 
     if not as_json and not no_banner:
         console.print(BANNER)

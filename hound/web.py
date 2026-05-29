@@ -36,6 +36,7 @@ def api_hunt():
 
         async def collect():
             results = []
+            yield f"data: {json.dumps({'_total': len(ALL_MODULES)})}\n\n"
             async for r in run():
                 results.append(r)
                 yield f"data: {json.dumps(r)}\n\n"
@@ -146,7 +147,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 </div>
 
 <script>
-let total = 27, checked = 0, found = 0, nf = 0, unk = 0;
+let total = 0, checked = 0, found = 0, nf = 0, unk = 0;
 
 function startHunt() {
   const email = document.getElementById('email-input').value.trim();
@@ -163,7 +164,6 @@ function startHunt() {
   document.getElementById('hunt-btn').textContent = '... hunting';
   updateStats();
 
-  const es = new EventSource('/api/hunt?' + new URLSearchParams({_: Date.now()}));
   fetch('/api/hunt', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -196,6 +196,7 @@ function startHunt() {
           }
           try {
             const r = JSON.parse(payload);
+            if (r._total !== undefined) { total = r._total; updateStats(); continue; }
             addResult(r, list);
           } catch {}
         }
