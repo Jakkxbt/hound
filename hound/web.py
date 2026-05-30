@@ -1,10 +1,25 @@
 import asyncio
 import json
+import time
+import collections
 from flask import Flask, request, jsonify, Response, render_template_string
 from .engine import hunt
 from .modules import ALL_MODULES
 
 app = Flask(__name__)
+
+# Simple in-process rate limiting — max 10 scans per IP per hour
+_rate: dict = collections.defaultdict(list)
+_RATE_LIMIT = 10
+_RATE_WINDOW = 3600
+
+def _check_rate(ip: str) -> bool:
+    now = time.time()
+    _rate[ip] = [t for t in _rate[ip] if now - t < _RATE_WINDOW]
+    if len(_rate[ip]) >= _RATE_LIMIT:
+        return False
+    _rate[ip].append(now)
+    return True
 
 
 @app.route("/")
@@ -14,9 +29,13 @@ def index():
 
 @app.route("/api/hunt", methods=["POST"])
 def api_hunt():
+    ip = (request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+          or request.remote_addr or "unknown")
+    if not _check_rate(ip):
+        return jsonify({"error": "Rate limit exceeded — try again later"}), 429
     data = request.json or {}
     email = data.get("email", "").strip()
-    if not email or "@" not in email:
+    if not email or "@" not in email or "." not in email.split("@")[-1]:
         return jsonify({"error": "Valid email required"}), 400
 
     def generate():

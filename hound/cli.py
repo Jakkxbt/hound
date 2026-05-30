@@ -30,6 +30,11 @@ BANNER = f"""
 def main(email, only, as_json, found_only, timeout, concurrency, no_banner):
     """Hunt for accounts registered to EMAIL across supported platforms."""
 
+    import re as _re
+    if not _re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        console.print(f"[red]Invalid email address: {email}[/red]")
+        raise SystemExit(1)
+
     if not as_json and not no_banner:
         console.print(BANNER)
 
